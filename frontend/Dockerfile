@@ -8,6 +8,7 @@ COPY frontend/package.json ./frontend/package.json
 RUN pnpm install --filter fluxroute-frontend --frozen-lockfile
 
 COPY frontend/tsconfig.json ./frontend/tsconfig.json
+COPY frontend/vite.config.ts ./frontend/vite.config.ts
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/src ./frontend/src
 

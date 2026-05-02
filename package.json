@@ -8,7 +8,8 @@
     "backend:dev": "pnpm --filter fluxroute-backend dev",
     "backend:test": "pnpm --filter fluxroute-backend test",
     "frontend:build": "pnpm --filter fluxroute-frontend build",
-    "frontend:dev": "pnpm --filter fluxroute-frontend dev"
+    "frontend:dev": "pnpm --filter fluxroute-frontend dev",
+    "frontend:test": "pnpm --filter fluxroute-frontend test"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
