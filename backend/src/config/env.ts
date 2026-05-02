@@ -11,6 +11,7 @@ export type GoogleRoutesConfig = {
 
 export type AppConfig = {
   timezone: string;
+  port: number;
   googleRoutes: GoogleRoutesConfig;
 };
 
@@ -44,6 +45,7 @@ function parseCoordinate(name: RequiredEnv): number {
 export function loadConfig(): AppConfig {
   return {
     timezone: process.env.TZ ?? "Europe/London",
+    port: parsePort(process.env.PORT),
     googleRoutes: {
       apiKey: getRequiredEnv("GOOGLE_ROUTES_API_KEY"),
       origin: {
@@ -56,4 +58,18 @@ export function loadConfig(): AppConfig {
       }
     }
   };
+}
+
+function parsePort(port: string | undefined): number {
+  if (!port) {
+    return 3000;
+  }
+
+  const parsedPort = Number(port);
+
+  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+    throw new Error("Environment variable PORT must be an integer between 1 and 65535");
+  }
+
+  return parsedPort;
 }

@@ -1,19 +1,24 @@
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     env_file:
       - ./backend/.env
     environment:
       DATABASE_URL: file:/data/commute.db
       TZ: Europe/London
+      PORT: 3000
+    ports:
+      - "3000:3000"
     volumes:
       - sqlite_data:/data
     restart: unless-stopped
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
       - "5173:80"
     restart: unless-stopped

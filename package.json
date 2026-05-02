@@ -1,0 +1,21 @@
+{
+  "name": "fluxroute",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "backend:build": "pnpm --filter fluxroute-backend build",
+    "backend:dev": "pnpm --filter fluxroute-backend dev",
+    "backend:test": "pnpm --filter fluxroute-backend test",
+    "frontend:build": "pnpm --filter fluxroute-frontend build",
+    "frontend:dev": "pnpm --filter fluxroute-frontend dev"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  }
+}
