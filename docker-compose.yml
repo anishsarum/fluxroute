@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: file:/data/commute.db
+      TZ: Europe/London
+    volumes:
+      - sqlite_data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
