@@ -49,6 +49,12 @@ type PrismaCommuteRecord = {
   captureSource: string;
   durationInTraffic: number;
   staticDuration: number;
+  originLabel: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationLabel: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
   dayOfWeek: string;
 };
 

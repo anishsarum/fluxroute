@@ -33,7 +33,7 @@ export class RecordCommuteSnapshot {
   async execute(captureSource: CaptureSource = "scheduled"): Promise<SavedCommuteRecord> {
     const routeSettings = await this.routeSettingsReader.getCurrent(this.defaultRouteSettings);
     const durations = await this.routeClient.getCurrentDriveDurations(routeSettings);
-    const record = buildCommuteRecord(durations, this.clock(), captureSource);
+    const record = buildCommuteRecord(durations, routeSettings, this.clock(), captureSource);
 
     return this.recordRepository.save(record);
   }

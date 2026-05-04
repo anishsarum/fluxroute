@@ -108,7 +108,7 @@ export function App() {
       </section>
 
       {collectMutation.isError ? (
-        <p className="-mt-1.5 mb-[18px] font-bold text-[#a84939]">
+        <p role="alert" className="-mt-1.5 mb-[18px] font-bold text-[#a84939]">
           Manual collection failed. Check backend logs and API key settings.
         </p>
       ) : null}
@@ -118,6 +118,7 @@ export function App() {
         isLoading={routeSettingsQuery.isLoading}
         hasError={routeSettingsQuery.isError}
         isSaving={updateRouteSettingsMutation.isPending}
+        isSaved={updateRouteSettingsMutation.isSuccess}
         saveError={updateRouteSettingsMutation.isError}
         onSave={(routeSettings) => updateRouteSettingsMutation.mutate(routeSettings)}
       />
@@ -165,7 +166,10 @@ function StatusPill({
   const label = isLoading ? "Checking API" : hasError ? "API unreachable" : "API online";
 
   return (
-    <div className="inline-flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-full border border-[#d6ddd8] bg-white px-3.5 text-sm font-bold text-[#5b6670]">
+    <div
+      role={hasError ? "alert" : "status"}
+      className="inline-flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-full border border-[#d6ddd8] bg-white px-3.5 text-sm font-bold text-[#5b6670]"
+    >
       <span
         aria-hidden="true"
         className={`h-2.5 w-2.5 rounded-full ${
@@ -191,6 +195,7 @@ function RouteSettingsPanel({
   isLoading,
   hasError,
   isSaving,
+  isSaved,
   saveError,
   onSave
 }: {
@@ -198,6 +203,7 @@ function RouteSettingsPanel({
   isLoading: boolean;
   hasError: boolean;
   isSaving: boolean;
+  isSaved: boolean;
   saveError: boolean;
   onSave: (routeSettings: RouteSettings) => void;
 }) {
@@ -241,12 +247,22 @@ function RouteSettingsPanel({
     onSave(toRouteSettings(formValues));
   }
 
+  const saveMessage = saveError ? (
+    <p role="alert" className="mb-3 text-sm font-bold text-[#a84939]">
+      Save failed
+    </p>
+  ) : isSaved ? (
+    <p role="status" className="mb-3 text-sm font-bold text-[#2f8f6b]">
+      Route saved
+    </p>
+  ) : null;
+
   return (
     <section className={`mb-[18px] ${panelClass}`} aria-label="Current route">
       <div className="mb-3.5 flex items-center justify-between gap-3">
         <span className="text-sm font-extrabold text-[#66717b]">Current route</span>
-        {saveError ? <strong className="text-sm text-[#a84939]">Save failed</strong> : null}
       </div>
+      {saveMessage}
       <form
         className="grid grid-cols-[repeat(2,minmax(0,1fr))_auto] items-end gap-3.5 max-[760px]:grid-cols-1"
         onSubmit={handleSubmit}
@@ -391,6 +407,7 @@ function RecordsTable({
         title="Records unavailable"
         detail="The backend did not return commute records."
         minHeightClass="min-h-[220px]"
+        role="alert"
       />
     );
   }
@@ -444,14 +461,17 @@ function RecordsTable({
 function EmptyState({
   title,
   detail,
-  minHeightClass
+  minHeightClass,
+  role
 }: {
   title: string;
   detail: string;
   minHeightClass: string;
+  role?: "alert" | "status";
 }) {
   return (
     <div
+      role={role}
       className={`grid place-content-center rounded-lg border border-dashed border-[#cfd8d2] bg-[#f8faf9] p-6 text-center text-[#5f6b74] ${minHeightClass}`}
     >
       <strong className="text-[#263340]">{title}</strong>

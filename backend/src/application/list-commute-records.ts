@@ -14,6 +14,12 @@ export type CommuteRecordView = {
   durationInTraffic: number;
   staticDuration: number;
   delay: number;
+  originLabel: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationLabel: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
   dayOfWeek: string;
 };
 
@@ -57,6 +63,12 @@ export function toCommuteRecordView(record: SavedCommuteRecord): CommuteRecordVi
     durationInTraffic: record.durationInTraffic,
     staticDuration: record.staticDuration,
     delay: record.durationInTraffic - record.staticDuration,
+    originLabel: record.originLabel,
+    originLatitude: record.originLatitude,
+    originLongitude: record.originLongitude,
+    destinationLabel: record.destinationLabel,
+    destinationLatitude: record.destinationLatitude,
+    destinationLongitude: record.destinationLongitude,
     dayOfWeek: record.dayOfWeek
   };
 }

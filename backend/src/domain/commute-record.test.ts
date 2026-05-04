@@ -15,6 +15,10 @@ describe("buildCommuteRecord", () => {
           durationInTraffic: 42,
           staticDuration: 31
         },
+        {
+          origin: { label: "Home", latitude: 51.5, longitude: -0.12 },
+          destination: { label: "Office", latitude: 51.45, longitude: -2.58 }
+        },
         new Date("2026-05-05T08:00:00.000Z"),
         "manual"
       )
@@ -23,6 +27,12 @@ describe("buildCommuteRecord", () => {
       captureSource: "manual",
       durationInTraffic: 42,
       staticDuration: 31,
+      originLabel: "Home",
+      originLatitude: 51.5,
+      originLongitude: -0.12,
+      destinationLabel: "Office",
+      destinationLatitude: 51.45,
+      destinationLongitude: -2.58,
       dayOfWeek: "Tuesday"
     });
   });

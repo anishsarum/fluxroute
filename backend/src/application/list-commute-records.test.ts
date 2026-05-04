@@ -41,6 +41,12 @@ describe("ListCommuteRecords", () => {
           captureSource: "scheduled",
           durationInTraffic: 35,
           staticDuration: 25,
+          originLabel: "Home",
+          originLatitude: 51.5,
+          originLongitude: -0.12,
+          destinationLabel: "Office",
+          destinationLatitude: 51.45,
+          destinationLongitude: -2.58,
           dayOfWeek: "Friday"
         }
       ])
@@ -56,6 +62,12 @@ describe("ListCommuteRecords", () => {
         durationInTraffic: 35,
         staticDuration: 25,
         delay: 10,
+        originLabel: "Home",
+        originLatitude: 51.5,
+        originLongitude: -0.12,
+        destinationLabel: "Office",
+        destinationLatitude: 51.45,
+        destinationLongitude: -2.58,
         dayOfWeek: "Friday"
       }
     ]);

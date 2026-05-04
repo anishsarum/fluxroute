@@ -46,6 +46,12 @@ describe("RecordCommuteSnapshot", () => {
       captureSource: "scheduled",
       durationInTraffic: 38,
       staticDuration: 26,
+      originLabel: "Home",
+      originLatitude: 51.5,
+      originLongitude: -0.12,
+      destinationLabel: "Office",
+      destinationLatitude: 51.45,
+      destinationLongitude: -2.58,
       dayOfWeek: "Wednesday"
     });
     expect(record).toMatchObject({

@@ -38,7 +38,7 @@ describe("App", () => {
 
     renderApp();
 
-    expect(await screen.findByText("API online")).toBeInTheDocument();
+    await expectStatus("API online");
     expect(screen.getByText("No commute data yet")).toBeInTheDocument();
     expect(screen.getByText("No records saved")).toBeInTheDocument();
   });
@@ -75,7 +75,7 @@ describe("App", () => {
 
     renderApp();
 
-    expect(await screen.findByText("API online")).toBeInTheDocument();
+    await expectStatus("API online");
     expect(metric("Records")).toHaveTextContent("1");
     expect(metric("Avg traffic")).toHaveTextContent("42m");
     expect(metric("Avg delay")).toHaveTextContent("12m");
@@ -118,12 +118,59 @@ describe("App", () => {
     await user.click(within(routePanel).getByRole("button", { name: "Save route" }));
 
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/route-settings/current",
+      "/api/route-settings/current",
       expect.objectContaining({
         method: "PUT",
         body: expect.stringContaining('"label":"Flat"')
       })
     );
+    expect(await within(routePanel).findByRole("status")).toHaveTextContent("Route saved");
+  });
+
+  it("announces when route settings fail to save", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = new URL(String(input), "http://localhost");
+      const pathname = url.pathname.replace(/^\/api/, "");
+
+      if (pathname === "/health") {
+        return jsonResponse({ status: "ok" });
+      }
+
+      if (pathname === "/route-settings/current" && init?.method === "PUT") {
+        return { ok: false, status: 500 } as Response;
+      }
+
+      if (pathname === "/route-settings/current") {
+        return jsonResponse({
+          origin: { label: "Home", latitude: 51.5072, longitude: -0.1276 },
+          destination: { label: "Office", latitude: 51.4545, longitude: -2.5879 }
+        });
+      }
+
+      if (pathname === "/commute-records") {
+        return jsonResponse([]);
+      }
+
+      return jsonResponse({
+        sampleSize: 0,
+        recentRecords: [],
+        weekdayAverages: []
+      });
+    });
+
+    renderApp();
+
+    const saveButton = await screen.findByRole("button", { name: "Save route" });
+    const routePanel = saveButton.closest("section");
+
+    if (!routePanel) {
+      throw new Error("Route panel not found");
+    }
+
+    await user.click(saveButton);
+
+    expect(await within(routePanel).findByRole("alert")).toHaveTextContent("Save failed");
   });
 
   it("shows an API unreachable state when health fails", async () => {
@@ -147,7 +194,7 @@ describe("App", () => {
 
     renderApp();
 
-    expect(await screen.findByText("API unreachable")).toBeInTheDocument();
+    await expectAlert("API unreachable");
   });
 
   it("shows a records unavailable state when the records request fails", async () => {
@@ -171,7 +218,7 @@ describe("App", () => {
 
     renderApp();
 
-    expect(await screen.findByText("Records unavailable")).toBeInTheDocument();
+    await expectAlert("Records unavailable");
   });
 
   it("does not mark zero or negative delay as delayed", async () => {
@@ -208,7 +255,7 @@ describe("App", () => {
 
     renderApp();
 
-    expect(await screen.findByText("API online")).toBeInTheDocument();
+    await expectStatus("API online");
     expect(screen.getByText("0m")).not.toHaveClass("delay");
     expect(screen.getByText("-2m")).not.toHaveClass("delay");
   });
@@ -287,9 +334,40 @@ describe("App", () => {
 
     await user.click(await screen.findByRole("button", { name: "Collect now" }));
 
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/commute-records/collect", {
+    expect(fetch).toHaveBeenCalledWith("/api/commute-records/collect", {
       method: "POST"
     });
+  });
+
+  it("announces when manual collection fails", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+
+      if (url.endsWith("/health")) {
+        return jsonResponse({ status: "ok" });
+      }
+
+      if (url.endsWith("/commute-records/collect")) {
+        return { ok: false, status: 500 } as Response;
+      }
+
+      if (url.endsWith("/commute-records?limit=100&captureSource=scheduled")) {
+        return jsonResponse([]);
+      }
+
+      return jsonResponse({
+        sampleSize: 0,
+        recentRecords: [],
+        weekdayAverages: []
+      });
+    });
+
+    renderApp();
+
+    await user.click(await screen.findByRole("button", { name: "Collect now" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Manual collection failed");
   });
 });
 
@@ -326,10 +404,21 @@ function metric(label: string): HTMLElement {
   return value;
 }
 
+async function expectStatus(message: string) {
+  await screen.findByText(message);
+  expect(screen.getByRole("status")).toHaveTextContent(message);
+}
+
+async function expectAlert(message: string) {
+  await screen.findByText(message);
+  expect(screen.getByRole("alert")).toHaveTextContent(message);
+}
+
 function mockFetch(routes: Record<string, unknown>) {
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
-    const url = new URL(String(input));
-    const key = `${url.pathname}${url.search}`;
+    const url = new URL(String(input), "http://localhost");
+    const pathname = url.pathname.replace(/^\/api/, "");
+    const key = `${pathname}${url.search}`;
     const body = routes[key] ?? defaultRoutes[key];
 
     if (body === undefined) {

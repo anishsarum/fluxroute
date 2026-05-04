@@ -6,6 +6,12 @@ export type CommuteRecord = {
   durationInTraffic: number;
   staticDuration: number;
   delay: number;
+  originLabel: string;
+  originLatitude: number;
+  originLongitude: number;
+  destinationLabel: string;
+  destinationLatitude: number;
+  destinationLongitude: number;
   dayOfWeek: string;
 };
 
@@ -42,7 +48,7 @@ export type HealthResponse = {
 };
 
 export function getApiBaseUrl(): string {
-  return import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+  return import.meta.env.VITE_API_BASE_URL ?? "/api";
 }
 
 export async function getHealth(): Promise<HealthResponse> {

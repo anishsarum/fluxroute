@@ -14,6 +14,12 @@ model CommuteRecord {
   captureSource     String   @default("scheduled")
   durationInTraffic Int
   staticDuration    Int
+  originLabel       String
+  originLatitude    Float
+  originLongitude   Float
+  destinationLabel  String
+  destinationLatitude Float
+  destinationLongitude Float
   dayOfWeek         String
 }
 
