@@ -1,5 +1,12 @@
-import type { CommuteRecordReader, CommuteRecordView } from "./list-commute-records.js";
-import { toCommuteRecordView } from "./list-commute-records.js";
+import type {
+  CaptureSourceFilter,
+  CommuteRecordReader,
+  CommuteRecordView
+} from "./list-commute-records.js";
+import {
+  normalizeCaptureSourceFilter,
+  toCommuteRecordView
+} from "./list-commute-records.js";
 
 export type WeekdayCommuteSummary = {
   dayOfWeek: string;
@@ -20,8 +27,11 @@ const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 export class GetCommuteSummary {
   constructor(private readonly recordReader: CommuteRecordReader) {}
 
-  async execute(limit = 500): Promise<CommuteSummary> {
-    const records = await this.recordReader.listRecent(limit);
+  async execute(limit = 500, captureSource: CaptureSourceFilter = "scheduled"): Promise<CommuteSummary> {
+    const records = await this.recordReader.listRecent(
+      limit,
+      normalizeCaptureSourceFilter(captureSource)
+    );
 
     return {
       sampleSize: records.length,

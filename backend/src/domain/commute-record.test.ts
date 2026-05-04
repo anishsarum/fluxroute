@@ -15,9 +15,12 @@ describe("buildCommuteRecord", () => {
           durationInTraffic: 42,
           staticDuration: 31
         },
-        new Date("2026-05-05T08:00:00.000Z")
+        new Date("2026-05-05T08:00:00.000Z"),
+        "manual"
       )
     ).toEqual({
+      capturedAt: new Date("2026-05-05T08:00:00.000Z"),
+      captureSource: "manual",
       durationInTraffic: 42,
       staticDuration: 31,
       dayOfWeek: "Tuesday"

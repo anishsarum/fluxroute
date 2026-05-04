@@ -1,17 +1,13 @@
-export type Coordinate = {
-  latitude: number;
-  longitude: number;
-};
+import type { RouteSettings } from "../domain/route-settings.js";
 
 export type GoogleRoutesConfig = {
   apiKey: string;
-  origin: Coordinate;
-  destination: Coordinate;
 };
 
 export type AppConfig = {
   timezone: string;
   port: number;
+  routeSettings: RouteSettings;
   googleRoutes: GoogleRoutesConfig;
 };
 
@@ -22,8 +18,10 @@ type RequiredEnv =
   | "COMMUTE_DESTINATION_LAT"
   | "COMMUTE_DESTINATION_LNG";
 
-function getRequiredEnv(name: RequiredEnv): string {
-  const value = process.env[name];
+type Env = NodeJS.ProcessEnv;
+
+function getRequiredEnv(env: Env, name: RequiredEnv): string {
+  const value = env[name];
 
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
@@ -32,8 +30,8 @@ function getRequiredEnv(name: RequiredEnv): string {
   return value;
 }
 
-function parseCoordinate(name: RequiredEnv): number {
-  const value = Number(getRequiredEnv(name));
+function parseCoordinate(env: Env, name: RequiredEnv): number {
+  const value = Number(getRequiredEnv(env, name));
 
   if (!Number.isFinite(value)) {
     throw new Error(`Environment variable ${name} must be a valid number`);
@@ -42,20 +40,31 @@ function parseCoordinate(name: RequiredEnv): number {
   return value;
 }
 
-export function loadConfig(): AppConfig {
+export function loadConfig(env: Env = process.env): AppConfig {
+  const origin = {
+    latitude: parseCoordinate(env, "COMMUTE_ORIGIN_LAT"),
+    longitude: parseCoordinate(env, "COMMUTE_ORIGIN_LNG")
+  };
+  const destination = {
+    latitude: parseCoordinate(env, "COMMUTE_DESTINATION_LAT"),
+    longitude: parseCoordinate(env, "COMMUTE_DESTINATION_LNG")
+  };
+
   return {
-    timezone: process.env.TZ ?? "Europe/London",
-    port: parsePort(process.env.PORT),
-    googleRoutes: {
-      apiKey: getRequiredEnv("GOOGLE_ROUTES_API_KEY"),
+    timezone: env.TZ ?? "Europe/London",
+    port: parsePort(env.PORT),
+    routeSettings: {
       origin: {
-        latitude: parseCoordinate("COMMUTE_ORIGIN_LAT"),
-        longitude: parseCoordinate("COMMUTE_ORIGIN_LNG")
+        ...origin,
+        label: env.COMMUTE_ORIGIN_LABEL ?? "Origin"
       },
       destination: {
-        latitude: parseCoordinate("COMMUTE_DESTINATION_LAT"),
-        longitude: parseCoordinate("COMMUTE_DESTINATION_LNG")
+        ...destination,
+        label: env.COMMUTE_DESTINATION_LABEL ?? "Destination"
       }
+    },
+    googleRoutes: {
+      apiKey: getRequiredEnv(env, "GOOGLE_ROUTES_API_KEY")
     }
   };
 }

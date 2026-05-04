@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { GoogleRoutesClient } from "./google-routes-client.js";
 import type { GoogleRoutesConfig } from "../config/env.js";
+import type { RouteSettings } from "../domain/route-settings.js";
 
 const config: GoogleRoutesConfig = {
-  apiKey: "test-api-key",
+  apiKey: "test-api-key"
+};
+
+const routeSettings: RouteSettings = {
   origin: {
+    label: "Home",
     latitude: 51.5,
     longitude: -0.12
   },
   destination: {
+    label: "Office",
     latitude: 51.45,
     longitude: -2.58
   }
@@ -27,9 +33,13 @@ describe("GoogleRoutesClient", () => {
         ]
       })
     });
-    const client = new GoogleRoutesClient(config, fetchImpl as typeof fetch);
+    const client = new GoogleRoutesClient(
+      config,
+      fetchImpl as typeof fetch,
+      () => new Date("2026-05-02T08:00:00.000Z")
+    );
 
-    await expect(client.getCurrentDriveDurations()).resolves.toEqual({
+    await expect(client.getCurrentDriveDurations(routeSettings)).resolves.toEqual({
       durationInTraffic: 30,
       staticDuration: 20
     });
@@ -44,6 +54,26 @@ describe("GoogleRoutesClient", () => {
         })
       })
     );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1]?.body as string)).toMatchObject({
+      origin: {
+        location: {
+          latLng: {
+            latitude: 51.5,
+            longitude: -0.12
+          }
+        }
+      },
+      destination: {
+        location: {
+          latLng: {
+            latitude: 51.45,
+            longitude: -2.58
+          }
+        }
+      },
+      departureTime: "2026-05-02T08:01:00.000Z",
+      routingPreference: "TRAFFIC_AWARE"
+    });
   });
 
   it("throws when Google returns no routes", async () => {
@@ -53,7 +83,7 @@ describe("GoogleRoutesClient", () => {
     });
     const client = new GoogleRoutesClient(config, fetchImpl as typeof fetch);
 
-    await expect(client.getCurrentDriveDurations()).rejects.toThrow(
+    await expect(client.getCurrentDriveDurations(routeSettings)).rejects.toThrow(
       "Google Routes API response did not include any routes"
     );
   });
@@ -66,7 +96,7 @@ describe("GoogleRoutesClient", () => {
     });
     const client = new GoogleRoutesClient(config, fetchImpl as typeof fetch);
 
-    await expect(client.getCurrentDriveDurations()).rejects.toThrow(
+    await expect(client.getCurrentDriveDurations(routeSettings)).rejects.toThrow(
       "Google Routes API request failed: 403 forbidden"
     );
   });

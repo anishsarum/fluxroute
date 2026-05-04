@@ -10,7 +10,20 @@ datasource db {
 model CommuteRecord {
   id                Int      @id @default(autoincrement())
   createdAt         DateTime @default(now())
+  capturedAt        DateTime @default(now())
+  captureSource     String   @default("scheduled")
   durationInTraffic Int
   staticDuration    Int
   dayOfWeek         String
+}
+
+model RouteSettings {
+  id                     Int      @id
+  originLabel            String
+  originLatitude         Float
+  originLongitude        Float
+  destinationLabel       String
+  destinationLatitude    Float
+  destinationLongitude   Float
+  updatedAt              DateTime @updatedAt
 }

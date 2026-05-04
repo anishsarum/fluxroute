@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getCommuteRecords, getCommuteSummary, getHealth } from "./api";
+import {
+  collectCommuteRecord,
+  getApiBaseUrl,
+  getCommuteRecords,
+  getCommuteSummary,
+  getCurrentRouteSettings,
+  getHealth,
+  updateCurrentRouteSettings
+} from "./api";
 
 describe("api client", () => {
   afterEach(() => {
@@ -13,11 +21,51 @@ describe("api client", () => {
     expect(fetch).toHaveBeenCalledWith("http://localhost:3000/health");
   });
 
+  it("fetches current route settings", async () => {
+    const routeSettings = {
+      origin: { label: "Home", latitude: 51.5, longitude: -0.12 },
+      destination: { label: "Office", latitude: 51.45, longitude: -2.58 }
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(routeSettings));
+
+    await expect(getCurrentRouteSettings()).resolves.toEqual(routeSettings);
+    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/route-settings/current");
+  });
+
+  it("updates current route settings", async () => {
+    const routeSettings = {
+      origin: { label: "Home", latitude: 51.5, longitude: -0.12 },
+      destination: { label: "Office", latitude: 51.45, longitude: -2.58 }
+    };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(routeSettings));
+
+    await expect(updateCurrentRouteSettings(routeSettings)).resolves.toEqual(routeSettings);
+    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/route-settings/current", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(routeSettings)
+    });
+  });
+
   it("fetches commute records with a limit", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([{ id: 1 }]));
 
     await expect(getCommuteRecords(25)).resolves.toEqual([{ id: 1 }]);
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/commute-records?limit=25");
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/commute-records?limit=25&captureSource=scheduled"
+    );
+  });
+
+  it("fetches commute records with a capture source filter", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([{ id: 1 }]));
+
+    await getCommuteRecords(25, "manual");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/commute-records?limit=25&captureSource=manual"
+    );
   });
 
   it("fetches commute summary", async () => {
@@ -25,6 +73,18 @@ describe("api client", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(summary));
 
     await expect(getCommuteSummary()).resolves.toEqual(summary);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/commute-records/summary?captureSource=scheduled"
+    );
+  });
+
+  it("posts manual commute collection requests", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ id: 1 }));
+
+    await expect(collectCommuteRecord()).resolves.toEqual({ id: 1 });
+    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/commute-records/collect", {
+      method: "POST"
+    });
   });
 
   it("throws when an API request fails", async () => {
@@ -34,6 +94,10 @@ describe("api client", () => {
     } as Response);
 
     await expect(getHealth()).rejects.toThrow("Request failed: 500");
+  });
+
+  it("uses the default API base URL", () => {
+    expect(getApiBaseUrl()).toBe("http://localhost:3000");
   });
 });
 

@@ -1,6 +1,10 @@
 import type { CommuteDurations } from "./commute-duration.js";
 
+export type CaptureSource = "scheduled" | "manual";
+
 export type NewCommuteRecord = {
+  capturedAt: Date;
+  captureSource: CaptureSource;
   durationInTraffic: number;
   staticDuration: number;
   dayOfWeek: string;
@@ -17,9 +21,12 @@ export function getDayOfWeek(date: Date): string {
 
 export function buildCommuteRecord(
   durations: CommuteDurations,
-  observedAt: Date
+  observedAt: Date,
+  captureSource: CaptureSource
 ): NewCommuteRecord {
   return {
+    capturedAt: observedAt,
+    captureSource,
     durationInTraffic: durations.durationInTraffic,
     staticDuration: durations.staticDuration,
     dayOfWeek: getDayOfWeek(observedAt)
