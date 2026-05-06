@@ -18,7 +18,7 @@ describe("api client", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ status: "ok" }));
 
     await expect(getHealth()).resolves.toEqual({ status: "ok" });
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/health");
+    expect(fetch).toHaveBeenCalledWith("/api/health");
   });
 
   it("fetches current route settings", async () => {
@@ -29,7 +29,7 @@ describe("api client", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(routeSettings));
 
     await expect(getCurrentRouteSettings()).resolves.toEqual(routeSettings);
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/route-settings/current");
+    expect(fetch).toHaveBeenCalledWith("/api/route-settings/current");
   });
 
   it("updates current route settings", async () => {
@@ -40,7 +40,7 @@ describe("api client", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(routeSettings));
 
     await expect(updateCurrentRouteSettings(routeSettings)).resolves.toEqual(routeSettings);
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/route-settings/current", {
+    expect(fetch).toHaveBeenCalledWith("/api/route-settings/current", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"
@@ -54,7 +54,7 @@ describe("api client", () => {
 
     await expect(getCommuteRecords(25)).resolves.toEqual([{ id: 1 }]);
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/commute-records?limit=25&captureSource=scheduled"
+      "/api/commute-records?limit=25&captureSource=scheduled"
     );
   });
 
@@ -64,17 +64,17 @@ describe("api client", () => {
     await getCommuteRecords(25, "manual");
 
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/commute-records?limit=25&captureSource=manual"
+      "/api/commute-records?limit=25&captureSource=manual"
     );
   });
 
   it("fetches commute summary", async () => {
-    const summary = { sampleSize: 0, recentRecords: [], weekdayAverages: [] };
+    const summary = { sampleSize: 0, recentRecords: [], departureMinuteAverages: [] };
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(summary));
 
     await expect(getCommuteSummary()).resolves.toEqual(summary);
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:3000/commute-records/summary?captureSource=scheduled"
+      "/api/commute-records/summary?captureSource=scheduled"
     );
   });
 
@@ -82,7 +82,7 @@ describe("api client", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ id: 1 }));
 
     await expect(collectCommuteRecord()).resolves.toEqual({ id: 1 });
-    expect(fetch).toHaveBeenCalledWith("http://localhost:3000/commute-records/collect", {
+    expect(fetch).toHaveBeenCalledWith("/api/commute-records/collect", {
       method: "POST"
     });
   });
@@ -97,7 +97,7 @@ describe("api client", () => {
   });
 
   it("uses the default API base URL", () => {
-    expect(getApiBaseUrl()).toBe("http://localhost:3000");
+    expect(getApiBaseUrl()).toBe("/api");
   });
 });
 

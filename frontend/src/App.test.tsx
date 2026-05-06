@@ -7,10 +7,24 @@ import { App } from "./App";
 
 vi.mock("recharts", () => {
   const passthrough = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
+  const barChart = ({
+    children,
+    data
+  }: {
+    children?: React.ReactNode;
+    data?: Array<{ departureMinute?: string }>;
+  }) => (
+    <div>
+      {data?.map((item) =>
+        item.departureMinute ? <span key={item.departureMinute}>{item.departureMinute}</span> : null
+      )}
+      {children}
+    </div>
+  );
 
   return {
-    Bar: () => null,
-    BarChart: passthrough,
+    Bar: ({ name }: { name: string }) => <span>{name}</span>,
+    BarChart: barChart,
     CartesianGrid: () => null,
     Legend: () => null,
     ResponsiveContainer: passthrough,
@@ -32,7 +46,7 @@ describe("App", () => {
       "/commute-records/summary?captureSource=scheduled": {
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       }
     });
 
@@ -55,15 +69,21 @@ describe("App", () => {
           durationInTraffic: 42,
           staticDuration: 30,
           delay: 12,
+          originLabel: "Home",
+          originLatitude: 51.5072,
+          originLongitude: -0.1276,
+          destinationLabel: "Office",
+          destinationLatitude: 51.4545,
+          destinationLongitude: -2.5879,
           dayOfWeek: "Monday"
         }
       ],
       "/commute-records/summary?captureSource=scheduled": {
         sampleSize: 1,
         recentRecords: [],
-        weekdayAverages: [
+        departureMinuteAverages: [
           {
-            dayOfWeek: "Monday",
+            departureMinute: "07:30",
             averageDurationInTraffic: 42,
             averageStaticDuration: 30,
             averageDelay: 12,
@@ -80,9 +100,17 @@ describe("App", () => {
     expect(metric("Avg traffic")).toHaveTextContent("42m");
     expect(metric("Avg delay")).toHaveTextContent("12m");
     expect(screen.getByText("Monday")).toBeInTheDocument();
+    expect(screen.getByText("07:30")).toBeInTheDocument();
     expect(screen.getAllByText("42m").length).toBeGreaterThan(0);
     expect(screen.getByText("30m")).toBeInTheDocument();
     expect(screen.getAllByText("12m").length).toBeGreaterThan(0);
+    const chart = screen.getByLabelText("Departure time chart");
+    expect(within(chart).getByText("Traffic")).toBeInTheDocument();
+    expect(within(chart).queryByText("Static")).not.toBeInTheDocument();
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("51.5072, -0.1276")).toBeInTheDocument();
+    expect(screen.getByText("Office")).toBeInTheDocument();
+    expect(screen.getByText("51.4545, -2.5879")).toBeInTheDocument();
   });
 
   it("renders editable route settings and saves changes", async () => {
@@ -97,7 +125,7 @@ describe("App", () => {
       "/commute-records/summary?captureSource=scheduled": {
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       }
     });
 
@@ -155,7 +183,7 @@ describe("App", () => {
       return jsonResponse({
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       });
     });
 
@@ -188,7 +216,7 @@ describe("App", () => {
       return jsonResponse({
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       });
     });
 
@@ -212,7 +240,7 @@ describe("App", () => {
       return jsonResponse({
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       });
     });
 
@@ -233,6 +261,12 @@ describe("App", () => {
           durationInTraffic: 30,
           staticDuration: 30,
           delay: 0,
+          originLabel: "Home",
+          originLatitude: 51.5072,
+          originLongitude: -0.1276,
+          destinationLabel: "Office",
+          destinationLatitude: 51.4545,
+          destinationLongitude: -2.5879,
           dayOfWeek: "Monday"
         },
         {
@@ -243,13 +277,19 @@ describe("App", () => {
           durationInTraffic: 28,
           staticDuration: 30,
           delay: -2,
+          originLabel: "Home",
+          originLatitude: 51.5072,
+          originLongitude: -0.1276,
+          destinationLabel: "Office",
+          destinationLatitude: 51.4545,
+          destinationLongitude: -2.5879,
           dayOfWeek: "Tuesday"
         }
       ],
       "/commute-records/summary?captureSource=scheduled": {
         sampleSize: 2,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       }
     });
 
@@ -268,7 +308,7 @@ describe("App", () => {
       "/commute-records/summary?captureSource=scheduled": {
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       },
       "/commute-records?limit=100&captureSource=manual": [
         {
@@ -279,13 +319,19 @@ describe("App", () => {
           durationInTraffic: 42,
           staticDuration: 30,
           delay: 12,
+          originLabel: "Home",
+          originLatitude: 51.5072,
+          originLongitude: -0.1276,
+          destinationLabel: "Office",
+          destinationLatitude: 51.4545,
+          destinationLongitude: -2.5879,
           dayOfWeek: "Monday"
         }
       ],
       "/commute-records/summary?captureSource=manual": {
         sampleSize: 1,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       }
     });
 
@@ -315,6 +361,12 @@ describe("App", () => {
           durationInTraffic: 42,
           staticDuration: 30,
           delay: 12,
+          originLabel: "Home",
+          originLatitude: 51.5072,
+          originLongitude: -0.1276,
+          destinationLabel: "Office",
+          destinationLatitude: 51.4545,
+          destinationLongitude: -2.5879,
           dayOfWeek: "Monday"
         });
       }
@@ -326,7 +378,7 @@ describe("App", () => {
       return jsonResponse({
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       });
     });
 
@@ -359,7 +411,7 @@ describe("App", () => {
       return jsonResponse({
         sampleSize: 0,
         recentRecords: [],
-        weekdayAverages: []
+        departureMinuteAverages: []
       });
     });
 

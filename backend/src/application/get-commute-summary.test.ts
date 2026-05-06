@@ -3,13 +3,13 @@ import { GetCommuteSummary } from "./get-commute-summary.js";
 import type { CommuteRecordReader } from "./list-commute-records.js";
 
 describe("GetCommuteSummary", () => {
-  it("summarizes records by weekday", async () => {
+  it("summarizes records by departure minute", async () => {
     const recordReader: CommuteRecordReader = {
       listRecent: vi.fn().mockResolvedValue([
         {
           id: 1,
-          createdAt: new Date("2026-05-04T07:30:00.000Z"),
-          capturedAt: new Date("2026-05-04T07:30:00.000Z"),
+          createdAt: new Date("2026-05-04T06:30:00.000Z"),
+          capturedAt: new Date("2026-05-04T06:30:00.000Z"),
           captureSource: "scheduled",
           durationInTraffic: 40,
           staticDuration: 30,
@@ -17,8 +17,8 @@ describe("GetCommuteSummary", () => {
         },
         {
           id: 2,
-          createdAt: new Date("2026-05-11T07:30:00.000Z"),
-          capturedAt: new Date("2026-05-11T07:30:00.000Z"),
+          createdAt: new Date("2026-05-11T06:30:45.000Z"),
+          capturedAt: new Date("2026-05-11T06:30:45.000Z"),
           captureSource: "scheduled",
           durationInTraffic: 44,
           staticDuration: 28,
@@ -26,8 +26,8 @@ describe("GetCommuteSummary", () => {
         },
         {
           id: 3,
-          createdAt: new Date("2026-05-05T07:30:00.000Z"),
-          capturedAt: new Date("2026-05-05T07:30:00.000Z"),
+          createdAt: new Date("2026-05-05T06:31:00.000Z"),
+          capturedAt: new Date("2026-05-05T06:31:00.000Z"),
           captureSource: "scheduled",
           durationInTraffic: 33,
           staticDuration: 30,
@@ -39,16 +39,16 @@ describe("GetCommuteSummary", () => {
 
     await expect(useCase.execute()).resolves.toMatchObject({
       sampleSize: 3,
-      weekdayAverages: [
+      departureMinuteAverages: [
         {
-          dayOfWeek: "Monday",
+          departureMinute: "07:30",
           averageDurationInTraffic: 42,
           averageStaticDuration: 29,
           averageDelay: 13,
           sampleSize: 2
         },
         {
-          dayOfWeek: "Tuesday",
+          departureMinute: "07:31",
           averageDurationInTraffic: 33,
           averageStaticDuration: 30,
           averageDelay: 3,
@@ -94,7 +94,7 @@ describe("GetCommuteSummary", () => {
     const useCase = new GetCommuteSummary(recordReader);
 
     await expect(useCase.execute()).resolves.toMatchObject({
-      weekdayAverages: [
+      departureMinuteAverages: [
         {
           averageDurationInTraffic: 42.3,
           averageStaticDuration: 30.7,

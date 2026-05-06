@@ -1,6 +1,6 @@
 import cron from "node-cron";
 
-export const commutePollingSchedule = "*/2 7,8 * * 1-5";
+export const commutePollingSchedule = "* 7,8 * * 1-5";
 
 export type CommutePollingJob = () => Promise<void>;
 

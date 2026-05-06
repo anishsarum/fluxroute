@@ -8,8 +8,8 @@ import {
   toCommuteRecordView
 } from "./list-commute-records.js";
 
-export type WeekdayCommuteSummary = {
-  dayOfWeek: string;
+export type DepartureMinuteCommuteSummary = {
+  departureMinute: string;
   averageDurationInTraffic: number;
   averageStaticDuration: number;
   averageDelay: number;
@@ -19,10 +19,8 @@ export type WeekdayCommuteSummary = {
 export type CommuteSummary = {
   sampleSize: number;
   recentRecords: CommuteRecordView[];
-  weekdayAverages: WeekdayCommuteSummary[];
+  departureMinuteAverages: DepartureMinuteCommuteSummary[];
 };
-
-const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export class GetCommuteSummary {
   constructor(private readonly recordReader: CommuteRecordReader) {}
@@ -36,29 +34,43 @@ export class GetCommuteSummary {
     return {
       sampleSize: records.length,
       recentRecords: records.slice(0, 10).map(toCommuteRecordView),
-      weekdayAverages: weekdays.flatMap((dayOfWeek) => {
-        const recordsForDay = records.filter((record) => record.dayOfWeek === dayOfWeek);
-
-        if (recordsForDay.length === 0) {
-          return [];
-        }
-
-        return [
-          {
-            dayOfWeek,
-            averageDurationInTraffic: average(
-              recordsForDay.map((record) => record.durationInTraffic)
-            ),
-            averageStaticDuration: average(recordsForDay.map((record) => record.staticDuration)),
-            averageDelay: average(
-              recordsForDay.map((record) => record.durationInTraffic - record.staticDuration)
-            ),
-            sampleSize: recordsForDay.length
-          }
-        ];
-      })
+      departureMinuteAverages: Array.from(groupRecordsByDepartureMinute(records).entries())
+        .sort(([firstMinute], [secondMinute]) => firstMinute.localeCompare(secondMinute))
+        .map(([departureMinute, recordsForMinute]) => ({
+          departureMinute,
+          averageDurationInTraffic: average(
+            recordsForMinute.map((record) => record.durationInTraffic)
+          ),
+          averageStaticDuration: average(recordsForMinute.map((record) => record.staticDuration)),
+          averageDelay: average(
+            recordsForMinute.map((record) => record.durationInTraffic - record.staticDuration)
+          ),
+          sampleSize: recordsForMinute.length
+        }))
     };
   }
+}
+
+function groupRecordsByDepartureMinute(
+  records: Awaited<ReturnType<CommuteRecordReader["listRecent"]>>
+): Map<string, Awaited<ReturnType<CommuteRecordReader["listRecent"]>>> {
+  const groupedRecords = new Map<string, Awaited<ReturnType<CommuteRecordReader["listRecent"]>>>();
+
+  for (const record of records) {
+    const departureMinute = formatDepartureMinute(record.capturedAt);
+    const recordsForMinute = groupedRecords.get(departureMinute) ?? [];
+    recordsForMinute.push(record);
+    groupedRecords.set(departureMinute, recordsForMinute);
+  }
+
+  return groupedRecords;
+}
+
+function formatDepartureMinute(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${hours}:${minutes}`;
 }
 
 function average(values: number[]): number {

@@ -18,8 +18,8 @@ export type CommuteRecord = {
 export type CaptureSource = "scheduled" | "manual";
 export type CaptureSourceFilter = CaptureSource | "all";
 
-export type WeekdayCommuteSummary = {
-  dayOfWeek: string;
+export type DepartureMinuteCommuteSummary = {
+  departureMinute: string;
   averageDurationInTraffic: number;
   averageStaticDuration: number;
   averageDelay: number;
@@ -29,7 +29,7 @@ export type WeekdayCommuteSummary = {
 export type CommuteSummary = {
   sampleSize: number;
   recentRecords: CommuteRecord[];
-  weekdayAverages: WeekdayCommuteSummary[];
+  departureMinuteAverages: DepartureMinuteCommuteSummary[];
 };
 
 export type LabeledCoordinate = {

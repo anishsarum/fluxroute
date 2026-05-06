@@ -130,12 +130,15 @@ export function App() {
       </section>
 
       <section className="grid grid-cols-1 gap-[18px] min-[980px]:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] min-[980px]:items-start">
-        <section className={panelClass} aria-label="Weekday commute chart">
+        <section className={panelClass} aria-label="Departure time chart">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-base font-bold tracking-normal">Weekday averages</h2>
-            <span className="text-sm font-bold text-[#6b7680]">{summary?.weekdayAverages.length ?? 0} days</span>
+            <h2 className="text-base font-bold tracking-normal">Departure time averages</h2>
+            <span className="text-sm font-bold text-[#6b7680]">{summary?.departureMinuteAverages.length ?? 0} slots</span>
           </div>
-          <WeekdayChart summary={summary} isLoading={summaryQuery.isLoading} />
+          <DepartureTimeChart
+            summary={summary}
+            isLoading={summaryQuery.isLoading}
+          />
         </section>
 
         <section className={panelClass} aria-label="Recent commute records">
@@ -345,7 +348,7 @@ function RouteFieldset({
   );
 }
 
-function WeekdayChart({
+function DepartureTimeChart({
   summary,
   isLoading
 }: {
@@ -356,7 +359,7 @@ function WeekdayChart({
     return <EmptyState title="Loading chart" detail="Fetching commute summary data." minHeightClass="min-h-[220px]" />;
   }
 
-  if (!summary || summary.weekdayAverages.length === 0) {
+  if (!summary || summary.departureMinuteAverages.length === 0) {
     return (
       <EmptyState
         title="No commute data yet"
@@ -369,13 +372,12 @@ function WeekdayChart({
   return (
     <div className="h-80 min-w-0">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={summary.weekdayAverages} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <BarChart data={summary.departureMinuteAverages} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="dayOfWeek" tickLine={false} axisLine={false} />
+          <XAxis dataKey="departureMinute" tickLine={false} axisLine={false} />
           <YAxis tickLine={false} axisLine={false} unit="m" />
           <Tooltip formatter={(value) => [`${value} min`, ""]} />
           <Legend />
-          <Bar dataKey="averageStaticDuration" name="Static" fill="#5576a1" radius={[4, 4, 0, 0]} />
           <Bar
             dataKey="averageDurationInTraffic"
             name="Traffic"
@@ -424,11 +426,13 @@ function RecordsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] border-collapse">
+      <table className="w-full min-w-[980px] border-collapse">
         <thead>
           <tr>
             <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Date</th>
             <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Source</th>
+            <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Origin</th>
+            <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Destination</th>
             <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Day</th>
             <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Traffic</th>
             <th className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-xs font-extrabold uppercase text-[#62707a]">Static</th>
@@ -440,6 +444,16 @@ function RecordsTable({
             <tr key={record.id}>
               <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">{formatDate(record.createdAt)}</td>
               <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">{record.captureSource}</td>
+              <RouteSnapshotCell
+                label={record.originLabel}
+                latitude={record.originLatitude}
+                longitude={record.originLongitude}
+              />
+              <RouteSnapshotCell
+                label={record.destinationLabel}
+                latitude={record.destinationLatitude}
+                longitude={record.destinationLongitude}
+              />
               <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">{record.dayOfWeek}</td>
               <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">{record.durationInTraffic}m</td>
               <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">{record.staticDuration}m</td>
@@ -455,6 +469,25 @@ function RecordsTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function RouteSnapshotCell({
+  label,
+  latitude,
+  longitude
+}: {
+  label: string;
+  latitude: number;
+  longitude: number;
+}) {
+  return (
+    <td className="border-b border-[#e6ebe7] px-2.5 py-[13px] text-left text-[#263340]">
+      <span className="block font-bold">{label}</span>
+      <span className="mt-1 block text-xs font-bold text-[#6b7680]">
+        {formatCoordinate(latitude)}, {formatCoordinate(longitude)}
+      </span>
+    </td>
   );
 }
 
@@ -481,19 +514,19 @@ function EmptyState({
 }
 
 function getAverageTraffic(summary: CommuteSummary | undefined): number | undefined {
-  if (!summary || !summary.weekdayAverages || summary.weekdayAverages.length === 0) {
+  if (!summary || !summary.departureMinuteAverages || summary.departureMinuteAverages.length === 0) {
     return undefined;
   }
 
-  return average(summary.weekdayAverages.map((day) => day.averageDurationInTraffic));
+  return average(summary.departureMinuteAverages.map((day) => day.averageDurationInTraffic));
 }
 
 function getAverageDelay(summary: CommuteSummary | undefined): number | undefined {
-  if (!summary || !summary.weekdayAverages || summary.weekdayAverages.length === 0) {
+  if (!summary || !summary.departureMinuteAverages || summary.departureMinuteAverages.length === 0) {
     return undefined;
   }
 
-  return average(summary.weekdayAverages.map((day) => day.averageDelay));
+  return average(summary.departureMinuteAverages.map((day) => day.averageDelay));
 }
 
 function average(values: number[]): number {
@@ -513,6 +546,13 @@ function formatDate(value: string): string {
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+function formatCoordinate(value: number): string {
+  return value.toLocaleString("en-GB", {
+    maximumFractionDigits: 6,
+    useGrouping: false
+  });
 }
 
 type RouteSettingsFormValues = {
