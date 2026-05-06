@@ -29,4 +29,4 @@ RUN pnpm --filter fluxroute-backend db:generate
 
 COPY --from=build /app/backend/dist ./backend/dist
 
-CMD ["sh", "-c", "pnpm --filter fluxroute-backend db:push && node backend/dist/main.js"]
+CMD ["sh", "-c", "pnpm --filter fluxroute-backend prisma migrate deploy && node backend/dist/main.js"]
